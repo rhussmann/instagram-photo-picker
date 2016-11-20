@@ -11,4 +11,6 @@ server.get('/posts', (req, res, next) => {
   return next();
 });
 
-server.listen(8080);
+server.listen(8080, () => {
+  console.log(`Server ${server.name} listening at ${server.url}`);
+});
