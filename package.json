@@ -18,5 +18,8 @@
   "homepage": "https://github.com/rhussmann/instagram-photo-picker#readme",
   "devDependencies": {
     "instagram-screen-scrape": "^2.0.0"
+  },
+  "dependencies": {
+    "restify": "^4.3.0"
   }
 }
