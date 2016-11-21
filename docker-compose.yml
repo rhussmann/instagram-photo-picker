@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ${PWD}/app:/data/www:ro
+      - ${PWD}/nginx.conf:/etc/nginx/nginx.conf:ro

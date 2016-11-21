@@ -1,0 +1,14 @@
+  <button type="button" class="btn btn-primary">
+    <span>Copy to Clipboard</span>
+  </button>
+{{#rows}}
+  <div class="row">
+    {{#images}}
+    <div class="col-xs-6 col-md-3">
+      <div class="thumbnail">
+        <img src="{{media}}" class="rhpreview">
+      </div>
+    </div>
+    {{/images}}
+  </div>
+{{/rows}}

@@ -1,0 +1,10 @@
+.rhpreview {
+  height: 253px;
+  width: 100%;
+}
+
+.rhselected {
+  border-style: solid;
+  border-width: 4px;
+  border-color: red;
+}
