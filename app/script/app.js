@@ -1,6 +1,6 @@
 $(function () {
   $.get('/posts.json', function(posts) {
-    $.get('/templates/thumbnailMonolith.html.mustache', function(template) {
+    $.get('/templates/thumbnails.html.mustache', function(template) {
       var ITEMS_PER_ROW = 4;
       var START_INDEX = 0;
       var TOTAL_NUM = 200;
