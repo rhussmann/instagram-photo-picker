@@ -1,0 +1,35 @@
+{
+  "name": "instagram-photo-picker-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rhussmann/instagram-photo-picker.git"
+  },
+  "author": "Ricky Hussmann",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rhussmann/instagram-photo-picker/issues"
+  },
+  "homepage": "https://github.com/rhussmann/instagram-photo-picker#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
+    "express": "^4.14.0",
+    "express-session": "^1.14.2",
+    "gm": "^1.23.0",
+    "passport": "^0.3.2",
+    "passport-instagram": "^1.0.0",
+    "request": "^2.79.0",
+    "rollbar": "^0.6.3",
+    "validator": "^6.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
