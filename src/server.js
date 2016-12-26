@@ -54,7 +54,14 @@ passport.use(new InstagramStrategy({
 var app = express();
 app.use(require('cookie-parser')());
 app.use(require('body-parser').json());
+
+/* TODO:
+* See the express-session docs and further research proper settings
+* for resave and saveUninitialized
+*/
 app.use(require('express-session')({
+  resave: false,                        // Set to squelch noise
+  saveUninitialized: false,             // Set to squelch noise
   secret: config.express.sessionSecret
 }));
 // Initialize Passport!  Also use passport.session() middleware, to support
