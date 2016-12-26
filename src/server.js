@@ -5,12 +5,18 @@ var request = require('request');
 var rollbar = require('rollbar');
 var validator = require('validator');
 var InstagramStrategy = require('passport-instagram').Strategy;
+var FileLayer = require('./FileLayer');
 
 var config = require('./config');
 
 var INSTAGRAM_CLIENT_ID = config.instagram.clientID;
 var INSTAGRAM_CLIENT_SECRET = config.instagram.clientSecret;
 const GEOMETRY_FORMAT = '128x128+0+0';
+
+const Cache = require('./cache');
+const Timer = require('./timer');
+const cache = new Cache(new Timer(100000));
+const fileLayer = new FileLayer();
 
 if (!INSTAGRAM_CLIENT_ID || !INSTAGRAM_CLIENT_SECRET) {
   console.log('Instagram client ID and secret must be specified in config');
@@ -76,19 +82,30 @@ app.post('/montage', function(req, res, next) {
   }
 }, function(req, res) {
   const photos = req.body;
-  var callChain = gm(request(photos[0]))
-  for (var i = 1; i < photos.length; i++) {
-    console.log('Chaining image', photos[i]);
-    callChain = callChain.montage(photos[i]);
-  }
-  callChain.geometry(GEOMETRY_FORMAT)
-    .stream('png', function(err, stdout, stderr) {
-      if (err) {
-        console.log('Error generating stream:', err);
-        return res.status(500).send('Failed to generate montage');
-      }
-      stdout.pipe(res);
-    });
+  const photoStreams = photos.map((item) => {
+    const cacheItem = cache.get(item);
+    if (cacheItem) {
+      return Promise.resolve(cacheItem);
+    } else {
+      return new Promise((resolve, reject) => {
+        request(item, (err, response, body) => {
+          cache.set(item, body);
+          resolve(body);
+        });
+      });
+    }
+  });
+
+  Promise.all(photoStreams).then(photoStreams => {
+    // var callChain = gm(photoStreams[0])
+    // for (var i = 1; i < photoStreams.length; i++) {
+    //   callChain = callChain.montage(photoStreams[i]);
+    // }
+    gm(request(photos[0]))
+    .montage({bufferStream: true}, request(photos[1]))
+    .geometry(GEOMETRY_FORMAT)
+    .stream().pipe(res);
+  });
 });
 
 // GET /auth/instagram
@@ -133,11 +150,14 @@ function ensureAuthenticated(req, res, next) {
 // Rollbar error handler: should occur after other handlers
 function errorHandler (err, req, res, next) {
   console.log('Reporting error', err);
+  console.log(err.stack);
   // rollbar.reportMessage(JSON.stringify(err));
   next();
 }
 app.use(errorHandler);
 
-app.listen(8000, function () {
-  console.log('Example app listening on port 8000!')
+fileLayer.initialize(() => {
+  app.listen(8000, function () {
+    console.log('Example app listening on port 8000!')
+  });
 });
