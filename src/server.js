@@ -54,7 +54,9 @@ passport.use(new InstagramStrategy({
 var app = express();
 app.use(require('cookie-parser')());
 app.use(require('body-parser').json());
-app.use(require('express-session')({ secret: 'uFe]rtzHUVg87hsrJXXV' }));
+app.use(require('express-session')({
+  secret: config.express.sessionSecret
+}));
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
