@@ -1,11 +1,12 @@
 var express = require('express');
+var fs = require('fs');
 var gm = require('gm');
 var passport = require('passport');
 var request = require('request');
 var rollbar = require('rollbar');
+var tmp = require('tmp');
 var validator = require('validator');
 var InstagramStrategy = require('passport-instagram').Strategy;
-var FileLayer = require('./FileLayer');
 
 var config = require('./config');
 
@@ -16,7 +17,6 @@ const GEOMETRY_FORMAT = '128x128+0+0';
 const Cache = require('./cache');
 const Timer = require('./timer');
 const cache = new Cache(new Timer(100000));
-const fileLayer = new FileLayer();
 
 if (!INSTAGRAM_CLIENT_ID || !INSTAGRAM_CLIENT_SECRET) {
   console.log('Instagram client ID and secret must be specified in config');
@@ -88,23 +88,31 @@ app.post('/montage', function(req, res, next) {
       return Promise.resolve(cacheItem);
     } else {
       return new Promise((resolve, reject) => {
-        request(item, (err, response, body) => {
-          cache.set(item, body);
-          resolve(body);
-        });
+        const tmpName = tmp.tmpNameSync();
+        request(item).on('end', (response) => {
+            cache.set(item, tmpName);
+            return resolve(tmpName);
+          })
+          .pipe(fs.createWriteStream(tmpName));
       });
     }
   });
 
   Promise.all(photoStreams).then(photoStreams => {
-    // var callChain = gm(photoStreams[0])
-    // for (var i = 1; i < photoStreams.length; i++) {
-    //   callChain = callChain.montage(photoStreams[i]);
-    // }
-    gm(request(photos[0]))
-    .montage({bufferStream: true}, request(photos[1]))
-    .geometry(GEOMETRY_FORMAT)
-    .stream().pipe(res);
+    var tmpMontageName = `${tmp.tmpNameSync()}.png`;
+    photoStreams.reverse();
+    var callChain = gm(photoStreams[0])
+    for (var i = 1; i < photoStreams.length; i++) {
+      callChain = callChain.montage(photoStreams[i]);
+    }
+    callChain.geometry(GEOMETRY_FORMAT)
+    .write(tmpMontageName, (err) => {
+      if (err) {
+        console.log(`Error generating image: ${err}`);
+        return res.status(500).send(err);
+      }
+      fs.createReadStream(tmpMontageName).pipe(res);
+    });
   });
 });
 
@@ -156,8 +164,6 @@ function errorHandler (err, req, res, next) {
 }
 app.use(errorHandler);
 
-fileLayer.initialize(() => {
-  app.listen(8000, function () {
-    console.log('Example app listening on port 8000!')
-  });
+app.listen(8000, function () {
+  console.log('Example app listening on port 8000!')
 });
