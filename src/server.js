@@ -111,6 +111,7 @@ app.post('/montage', function(req, res, next) {
         console.log(`Error generating image: ${err}`);
         return res.status(500).send(err);
       }
+      res.setHeader('Content-Type', 'image/png');
       fs.createReadStream(tmpMontageName).pipe(res);
     });
   });
