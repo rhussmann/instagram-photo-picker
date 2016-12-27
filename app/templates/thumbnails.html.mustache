@@ -1,12 +1,15 @@
-  <button type="button" class="btn btn-primary">
+  <button id="copy-button" type="button" class="btn btn-primary">
     <span>Copy to Clipboard</span>
+  </button>
+  <button id="montage-button" type="button" class="btn btn-primary">
+    <span>Generate Montage</span>
   </button>
 {{#rows}}
   <div class="row">
     {{#images}}
     <div class="col-xs-6 col-md-3">
       <div class="thumbnail">
-        <img src="{{media}}" class="rhpreview">
+        <img src="{{images.standard_resolution.url}}" class="rhpreview">
       </div>
     </div>
     {{/images}}

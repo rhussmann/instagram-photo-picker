@@ -1,3 +1,4 @@
+var base64 = require('base64-stream');
 var express = require('express');
 var fs = require('fs');
 var gm = require('gm');
@@ -12,7 +13,7 @@ var config = require('./config');
 
 var INSTAGRAM_CLIENT_ID = config.instagram.clientID;
 var INSTAGRAM_CLIENT_SECRET = config.instagram.clientSecret;
-const GEOMETRY_FORMAT = '128x128+0+0';
+const GEOMETRY_FORMAT = '1000x1000+0+0';
 
 const Cache = require('./cache');
 const Timer = require('./timer');
@@ -36,7 +37,7 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new InstagramStrategy({
     clientID: INSTAGRAM_CLIENT_ID,
     clientSecret: INSTAGRAM_CLIENT_SECRET,
-    callbackURL: "http://localhost:8000/auth/instagram/callback"
+    callbackURL: "http://photopicker.local:8080/api/auth/instagram/callback"
   },
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...
@@ -46,7 +47,7 @@ passport.use(new InstagramStrategy({
       // represent the logged-in user.  In a typical application, you would want
       // to associate the Instagram account with a user record in your database,
       // and return that user instead.
-      return done(null, profile);
+      return done(null, {profile: profile, accessToken: accessToken});
     });
   }
 ));
@@ -60,6 +61,9 @@ app.use(require('body-parser').json());
 * for resave and saveUninitialized
 */
 app.use(require('express-session')({
+  cookie: {
+    httpOnly: false
+  },
   resave: false,                        // Set to squelch noise
   saveUninitialized: false,             // Set to squelch noise
   secret: config.express.sessionSecret
@@ -69,19 +73,25 @@ app.use(require('express-session')({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/', function(req, res){
-  res.render('index', { user: req.user });
+app.get('/api', function(req, res){
+  console.log('User is', req.user);
+  res.send(`Hello ${req.user.profile.displayName}`);
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
+app.get('/api/account', ensureAuthenticated, function(req, res){
   request(req.user._json.data.profile_picture).pipe(res);
+});
+
+app.get('/api/posts', ensureAuthenticated, function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  request.get(`https://api.instagram.com/v1/users/self/media/recent/?access_token=${req.user.accessToken}`).pipe(res);
 });
 
 app.get('/login', function(req, res){
   res.render('login', { user: req.user });
 });
 
-app.post('/montage', function(req, res, next) {
+app.post('/api/montage', function(req, res, next) {
   if (Array.isArray(req.body) &&
         req.body.every(i => validator.isURL(i)) &&
         req.body.length >= 2) {
@@ -115,43 +125,51 @@ app.post('/montage', function(req, res, next) {
       callChain = callChain.montage(photoStreams[i]);
     }
     callChain.geometry(GEOMETRY_FORMAT)
+    .tile('10x10')
     .write(tmpMontageName, (err) => {
       if (err) {
         console.log(`Error generating image: ${err}`);
         return res.status(500).send(err);
       }
       res.setHeader('Content-Type', 'image/png');
-      fs.createReadStream(tmpMontageName).pipe(res);
+      fs.createReadStream(tmpMontageName).pipe(base64.encode()).pipe(res);
     });
   });
 });
 
-// GET /auth/instagram
+// GET /api/auth/instagram
 //   Use passport.authenticate() as route middleware to authenticate the
 //   request.  The first step in Instagram authentication will involve
 //   redirecting the user to instagram.com.  After authorization, Instagram
-//   will redirect the user back to this application at /auth/instagram/callback
-app.get('/auth/instagram',
+//   will redirect the user back to this application at /api/auth/instagram/callback
+app.get('/api/auth/instagram',
   passport.authenticate('instagram'),
   function(req, res){
     // The request will be redirected to Instagram for authentication, so this
     // function will not be called.
   });
 
-// GET /auth/instagram/callback
+// GET /api/auth/instagram/callback
 //   Use passport.authenticate() as route middleware to authenticate the
 //   request.  If authentication fails, the user will be redirected back to the
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
-app.get('/auth/instagram/callback',
+app.get('/api/auth/instagram/callback',
   passport.authenticate('instagram', { failureRedirect: '/login' }),
   function(req, res) {
     res.redirect('/');
   });
 
-app.get('/logout', function(req, res){
+app.get('/api/logout', function(req, res){
   req.logout();
-  res.redirect('/');
+    cookie = req.cookies;
+    for (var prop in cookie) {
+        if (!cookie.hasOwnProperty(prop)) {
+            continue;
+        }
+        res.cookie(prop, '', {expires: new Date(0)});
+    }
+    res.redirect('/');
 });
 
 
