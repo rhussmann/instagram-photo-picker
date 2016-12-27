@@ -76,6 +76,12 @@ app.use(function(req, res, next) {
   console.log(`${req.method} - ${req.url}`);
   next();
 });
+app.use(function(req, res, next) {
+  req.on('end', function() {
+    console.log(`${req.method} - ${req.url} - END`);
+  });
+  next();
+});
 
 app.get('/api', function(req, res){
   console.log('User is', req.user);
@@ -108,11 +114,14 @@ app.post('/api/montage', function(req, res, next) {
   const photoStreams = photos.map((item) => {
     const cacheItem = cache.get(item);
     if (cacheItem) {
+      console.log(`Cache hit for ${item}`)
       return Promise.resolve(cacheItem);
     } else {
+      console.log(`Cache miss for ${item}, fetching...`)
       return new Promise((resolve, reject) => {
         const tmpName = tmp.tmpNameSync();
         request(item).on('end', (response) => {
+            console.log(`Finished downloading cache item ${item}`);
             cache.set(item, tmpName);
             return resolve(tmpName);
           })
@@ -122,8 +131,10 @@ app.post('/api/montage', function(req, res, next) {
   });
 
   Promise.all(photoStreams).then(photoStreams => {
+    console.log('All files downloaded');
     var tmpMontageName = `${tmp.tmpNameSync()}.png`;
     photoStreams.reverse();
+    console.log('Starting montage of images');
     var callChain = gm(photoStreams[0])
     for (var i = 1; i < photoStreams.length; i++) {
       callChain = callChain.montage(photoStreams[i]);
@@ -135,6 +146,8 @@ app.post('/api/montage', function(req, res, next) {
         console.log(`Error generating image: ${err}`);
         return res.status(500).send(err);
       }
+
+      console.log('Finished generating montage, streaming out');
       res.setHeader('Content-Type', 'image/png');
       fs.createReadStream(tmpMontageName).pipe(base64.encode()).pipe(res);
     });
