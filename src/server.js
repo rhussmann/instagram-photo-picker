@@ -72,6 +72,10 @@ app.use(require('express-session')({
 // persistent login sessions (recommended).
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(function(req, res, next) {
+  console.log(`${req.method} - ${req.url}`);
+  next();
+});
 
 app.get('/api', function(req, res){
   console.log('User is', req.user);
