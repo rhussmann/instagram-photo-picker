@@ -172,8 +172,13 @@ app.get('/api/auth/instagram',
 //   login page.  Otherwise, the primary route function function will be called,
 //   which, in this example, will redirect the user to the home page.
 app.get('/api/auth/instagram/callback',
+  function(req,res,next) {
+    console.log('Preparing to auth with Instagram');
+    next();
+  },
   passport.authenticate('instagram', { failureRedirect: '/login' }),
   function(req, res) {
+    console.log('Authenticated with Instagram');
     res.redirect('/');
   });
 
