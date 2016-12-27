@@ -37,7 +37,7 @@ passport.deserializeUser(function(obj, done) {
 passport.use(new InstagramStrategy({
     clientID: INSTAGRAM_CLIENT_ID,
     clientSecret: INSTAGRAM_CLIENT_SECRET,
-    callbackURL: "http://photopicker.local:8080/api/auth/instagram/callback"
+    callbackURL: config.instagram.callbackUrl
   },
   function(accessToken, refreshToken, profile, done) {
     // asynchronous verification, for effect...

@@ -1,7 +1,11 @@
 {
+  "express": {
+    "sessionSecret": "INSERT SESSION SECRET"
+  },
   "instagram": {
     "clientID": "INSERT CLIENT ID HERE",
-    "clientSecret": "INSERT CLIENT SECRET HERE"
+    "clientSecret": "INSERT CLIENT SECRET HERE",
+    "callbackUrl": "http://SOME_HOST/api/auth/instagram/callback"
   },
   "rollbar": {
     "serversideToken": "INSERT ROLLBAR TOKEN HERE"
