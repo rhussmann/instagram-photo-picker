@@ -7,10 +7,4 @@ services:
       - "8080:80"
     volumes:
       - ${PWD}/app:/data/www:ro
-      - ${PWD}/nginx.conf:/etc/nginx/nginx.conf:ro
-    links:
-      - app
-  app:
-    build: ./src
-    ports:
-      - "8000:8000"
+      - ${PWD}/nginx.dev.conf:/etc/nginx/nginx.conf:ro
