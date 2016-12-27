@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "node test/test.js",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "prodStart": "forever server.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
     "cookie-parser": "^1.4.3",
     "express": "^4.14.0",
     "express-session": "^1.14.2",
+    "forever": "^0.15.3",
     "gm": "^1.23.0",
     "passport": "^0.3.2",
     "passport-instagram": "^1.0.0",
