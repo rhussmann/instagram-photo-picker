@@ -1,6 +1,6 @@
 FROM mpneuried/nodejs-alpine-buildtools-gm:latest
 
-ADD . /app
+ADD src /app
 WORKDIR /app
 RUN npm install
 

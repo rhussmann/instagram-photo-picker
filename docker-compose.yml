@@ -11,6 +11,6 @@ services:
     links:
       - app
   app:
-    build: ./src
+    build: .
     ports:
       - "8000:8000"
